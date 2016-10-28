@@ -39,8 +39,8 @@ Sets the /h:<height> parameter on the mstsc command: Specifies the height of the
 .NOTES   
 Name:        Connect-Mstsc
 Author:      Jaap Brasser
-DateUpdated: 2016-10-26
-Version:     1.2.4
+DateUpdated: 2016-10-28
+Version:     1.2.5
 Blog:        http://www.jaapbrasser.com
 
 .LINK
@@ -115,6 +115,13 @@ PowerShell.exe -Command "& {. .\Connect-Mstsc.ps1; Connect-Mstsc server01 contos
 Description
 -----------
 An remote desktop session to server01 will be created using the credentials of contoso\jaapbrasser connecting to the administrative session, this example can be used when scheduling tasks or for batch files.
+
+.EXAMPLE
+Connect-Mstsc -ComputerName server01 -User LAPSAdmin -Password (Get-LAPSPassword -ComputerName server01)
+
+Description 
+-----------     
+A RDP session to server01 with the user LAPSAdmin and using the Get-LAPSPassword cmdlet to retrieve the dynamic password for this system.
 #>
     [cmdletbinding(SupportsShouldProcess,DefaultParametersetName='UserPassword')]
     param (
@@ -162,7 +169,9 @@ An remote desktop session to server01 will be created using the credentials of c
 
         if ($Credential) {
             $User     = $Credential.UserName
-            $Password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR(($Credential.GetNetworkCredential().Password)))
+            $Password = $Credential.GetNetworkCredential().Password
+        } else {
+            $Password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password))
         }
     }
     process {
@@ -177,18 +186,18 @@ An remote desktop session to server01 will be created using the credentials of c
                 $ComputerCmdkey = $Computer
             }
 
-            $ProcessInfo.FileName = "$($env:SystemRoot)\system32\cmdkey.exe"
-            $ProcessInfo.Arguments = "/generic:TERMSRV/$ComputerCmdkey /user:$User /pass:$Password"
+            $ProcessInfo.FileName    = "$($env:SystemRoot)\system32\cmdkey.exe"
+            $ProcessInfo.Arguments   = "/generic:TERMSRV/$ComputerCmdkey /user:$User /pass:$Password"
             $ProcessInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
-            $Process.StartInfo = $ProcessInfo
+            $Process.StartInfo       = $ProcessInfo
             if ($PSCmdlet.ShouldProcess($ComputerCmdkey,'Adding credentials to store')) {
                 [void]$Process.Start()
             }
 
-            $ProcessInfo.FileName = "$($env:SystemRoot)\system32\mstsc.exe"
-            $ProcessInfo.Arguments = "$MstscArguments /v $Computer"
+            $ProcessInfo.FileName    = "$($env:SystemRoot)\system32\mstsc.exe"
+            $ProcessInfo.Arguments   = "$MstscArguments /v $Computer"
             $ProcessInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Normal
-            $Process.StartInfo = $ProcessInfo
+            $Process.StartInfo       = $ProcessInfo
             if ($PSCmdlet.ShouldProcess($Computer,'Connecting mstsc')) {
                 [void]$Process.Start()
                 if ($Wait) {
@@ -203,14 +212,18 @@ function Get-LAPSPassword {
 <#
 .SYNOPSIS
 Retrieves the LAPS Password
+
 .DESCRIPTION
 Retrieves the LAPS password for a certain computer name. This can be used to remotely login to this system
+
 .NOTES   
-Name:        Connect-Mstsc
+Name:        Get-LAPSPassword
 Author:      Jaap Brasser
-DateUpdated: 2016-10-26
-Version:     1.2.4
+DateUpdated: 2016-10-28
+DateCreated: 2016-10-26
+Version:     1.0.0
 Blog:        http://www.jaapbrasser.com
+
 .EXAMPLE   
 Get-LAPSPassword -ComputerName server01
 
