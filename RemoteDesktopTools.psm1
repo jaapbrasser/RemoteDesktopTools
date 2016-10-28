@@ -187,7 +187,7 @@ A RDP session to server01 with the user LAPSAdmin and using the Get-LAPSPassword
             }
 
             $ProcessInfo.FileName    = "$($env:SystemRoot)\system32\cmdkey.exe"
-            $ProcessInfo.Arguments   = "/generic:TERMSRV/$ComputerCmdkey /user:$User /pass:$Password"
+            $ProcessInfo.Arguments   = "/generic:TERMSRV/$ComputerCmdkey /user:$User /pass:$($Password)"
             $ProcessInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
             $Process.StartInfo       = $ProcessInfo
             if ($PSCmdlet.ShouldProcess($ComputerCmdkey,'Adding credentials to store')) {
